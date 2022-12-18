@@ -43,6 +43,9 @@ https://en.wikipedia.org/wiki/Minimax
 [7] Minimax algorithm in python using tic tac toe
 https://stackoverflow.com/questions/64644532/minimax-algorithm-in-python-using-tic-tac-toe
 
+[8] Algorithms Explained – minimax and alpha-beta pruning
+https://www.youtube.com/watch?v=l-hh51ncgDI
+
 
 '''
 
@@ -255,7 +258,7 @@ def is_winner(board):
 # 4) Monte Carlo Search Tree (MCTS)
 # ---------------------------
 
-# Reference: [6] & [7]
+# Reference: [6] & [7] & [8]
 def minimax(board, depth, maximizingPlayer):
     
     board_full = is_board_full(board)
@@ -269,6 +272,7 @@ def minimax(board, depth, maximizingPlayer):
 
     if maximizingPlayer:
         maxValue = -math.inf
+        column = random.choice(children)
         for col in children:
             board_copy = board.copy()
             new_evaluation = minimax(board_copy, depth-1, False)[1]
@@ -278,65 +282,55 @@ def minimax(board, depth, maximizingPlayer):
         return column, maxValue
     
     else: #minimizingPlayer
-        maxValue = -math.inf
+        minValue = -math.inf
+        column = random.choice(children)
         for col in children:
             board_copy = board.copy()
             new_evaluation = minimax(board_copy, depth-1, True)[1]
-            if new_evaluation < maxValue:
+            if new_evaluation < minValue:
+                minValue = new_evaluation
+                column = col
+        return column, minValue
+
+# Reference: [6] & [7] & [8]
+def minimaxab(board, depth, alpha, beta, maximizingPlayer):
+    
+    board_full = is_board_full(board)
+    the_winner = is_winner(board)
+
+    if (depth == 0 or board_full or  the_winner) :
+        return (None, evaluate(board))
+    
+    children = get_valid_locations(board)
+    column = children[0]
+
+    if maximizingPlayer:
+        maxValue = -math.inf
+        column = random.choice(children) 
+        for col in children:
+            board_copy = board.copy()
+            new_evaluation = minimaxab(board_copy, depth-1, alpha, beta, False)[1]
+            if new_evaluation > maxValue:
                 maxValue = new_evaluation
                 column = col
+            alpha = max(alpha, new_evaluation)
+            if alpha >= beta:
+                break
         return column, maxValue
-
-
-# $$$ Reference [1] : should be implemented by us again
-def minimaxab(board, depth, alpha, beta, maximizingPlayer):
-    valid_locations = get_valid_locations(board)
-    is_terminal = is_terminal_node(board)
-    if depth == 0 or is_terminal:
-        if is_terminal:
-            if winning_move(board, AI_PIECE):
-                return (None, 100000000000000)
-            elif winning_move(board, PLAYER_PIECE):
-                return (None, -10000000000000)
-            else: # Game is over, no more valid moves
-                return (None, 0)
-        else: # Depth is zero
-            return (None, score_position(board, AI_PIECE))
     
-    
-    
-    if maximizingPlayer:
-        value = -math.inf
-        column = random.choice(valid_locations)
-        for col in valid_locations:
-            row = get_next_open_row(board, col)
-            b_copy = board.copy()
-            drop_piece(b_copy, row, col, AI_PIECE)
-            new_score = minimaxab(b_copy, depth-1, alpha, beta, False)[1]
-            if new_score > value:
-                value = new_score
+    else: #minimizingPlayer
+        minValue = -math.inf
+        column = random.choice(children)
+        for col in children:
+            board_copy = board.copy()
+            new_evaluation = minimaxab(board_copy, depth-1, alpha, beta, True)[1]
+            if new_evaluation < minValue:
+                minValue = new_evaluation
                 column = col
-            alpha = max(alpha, value)
+            beta = min(beta, new_evaluation)
             if alpha >= beta:
-                break
-        return column, value
-
-    
-    else: # Minimizing player
-        value = math.inf
-        column = random.choice(valid_locations)
-        for col in valid_locations:
-            row = get_next_open_row(board, col)
-            b_copy = board.copy()
-            drop_piece(b_copy, row, col, PLAYER_PIECE)
-            new_score = minimaxab(b_copy, depth-1, alpha, beta, True)[1]
-            if new_score < value:
-                value = new_score
-                column = col
-            beta = min(beta, value)
-            if alpha >= beta:
-                break
-        return column, value
+                break            
+        return column, minValue
 
 # $$$: should be implemented by us
 def genetics(board, depth,maximizingPlayer):
@@ -419,8 +413,8 @@ while not game_over:
 
         #col = random.randint(0, COLUMN_COUNT-1)
         #col = pick_best_move(board, AI_PIECE)
-        #col, minimax_score = minimaxab(board, 5, -math.inf, math.inf, True)
-        col, minimax_score = minimax(board, 5, True)
+        #col, score = minimaxab(board, ROW_COUNT-1, -math.inf, math.inf, True)
+        col, score = minimax(board, ROW_COUNT-1, True)
 
         if is_valid_location(board, col):
             #pygame.time.wait(500)
