@@ -24,7 +24,6 @@ Resources
 [1] Connect4-Python Visualization
 https://github.com/KeithGalli/Connect4-Python
 
-
 [2] Programming a Connect-4 game on Python
 https://oscarnieves100.medium.com/programming-a-connect-4-game-on-python-f0e787a3a0cf
 
@@ -45,6 +44,12 @@ https://stackoverflow.com/questions/64644532/minimax-algorithm-in-python-using-t
 
 [8] Algorithms Explained – minimax and alpha-beta pruning
 https://www.youtube.com/watch?v=l-hh51ncgDI
+
+[9] MCTS algorithm exlained
+http://fractalytics.io/application-of-mcts-within-the-connect4-game 
+
+[10] MCTS algorithm exlained
+https://github.com/Alfo5123/Connect4 
 
 
 '''
@@ -338,7 +343,7 @@ def minimaxab(board, depth, alpha, beta, maximizingPlayer):
 def genetics(board, depth,maximizingPlayer):
     pass
 
-# $$$: should be implemented by us
+# Reference: [99] & [10]
 def MCTS(board, depth, maximizingPlayer):
     return mcts.run(board, depth, maximizingPlayer)
 
@@ -416,8 +421,8 @@ while not game_over:
         #col = random.randint(0, COLUMN_COUNT-1)
         #col = pick_best_move(board, AI_PIECE)
         #col, score = minimaxab(board, ROW_COUNT-1, -math.inf, math.inf, True)
-        col, score = minimax(board, ROW_COUNT-1, True)
-        # col, score = MCTS(board, ROW_COUNT-1, True)
+        # col, score = minimax(board, ROW_COUNT-1, True)
+        col, score = MCTS(board, ROW_COUNT-1, True)
 
         if is_valid_location(board, col):
             #pygame.time.wait(500)

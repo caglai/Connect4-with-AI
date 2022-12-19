@@ -219,7 +219,7 @@ def run(board, depth, maximizingPlayer):
 	# create a tree node based on the current board 
 	o = Node(Board(b))
 
-	# feed the root to the MCTS algortihm to find the best move possible
+	# feed it to the MCTS algorithm to find the best move possible
 	bestMove, score = MCTS(o)
 
 	# print(bestMove.state.last_move, score)
