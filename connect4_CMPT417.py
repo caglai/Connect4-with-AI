@@ -65,6 +65,8 @@ import pygame
 import sys
 import math
 
+import mcts
+
 # ---------------------------
 # Global Variables
 # ---------------------------
@@ -337,8 +339,8 @@ def genetics(board, depth,maximizingPlayer):
     pass
 
 # $$$: should be implemented by us
-def MCTS(board, depth,maximizingPlayer):
-    pass
+def MCTS(board, depth, maximizingPlayer):
+    return mcts.run(board, depth, maximizingPlayer)
 
 
 # ---------------------------
@@ -415,6 +417,7 @@ while not game_over:
         #col = pick_best_move(board, AI_PIECE)
         #col, score = minimaxab(board, ROW_COUNT-1, -math.inf, math.inf, True)
         col, score = minimax(board, ROW_COUNT-1, True)
+        # col, score = MCTS(board, ROW_COUNT-1, True)
 
         if is_valid_location(board, col):
             #pygame.time.wait(500)
