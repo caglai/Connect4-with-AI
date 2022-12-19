@@ -69,6 +69,7 @@ import argparse
 import random
 import pygame
 import sys
+import time
 import math
 
 import mcts
@@ -430,8 +431,13 @@ while not game_over:
 
         #col = random.randint(0, COLUMN_COUNT-1)
         #col = pick_best_move(board, AI_PIECE)
-        col, score = minimaxab(board, ROW_COUNT-1, -math.inf, math.inf, True)
-        #col, score = minimax(board, ROW_COUNT-1, True)
+        st = time.time()
+        #col, score = minimaxab(board, ROW_COUNT-1, -math.inf, math.inf, True)
+        col, score = minimax(board, ROW_COUNT-1, True)
+        et = time.time()
+        elapsed_time = et - st
+        print('Execution time:', elapsed_time, 'seconds')
+        
 
         if is_valid_location(board, col):
             #pygame.time.wait(500)
