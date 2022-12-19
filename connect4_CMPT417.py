@@ -355,7 +355,16 @@ def MCTS(board, depth, maximizingPlayer):
 # ---------------------------
 parser = argparse.ArgumentParser(description='Play Connect 4.')
 parser.add_argument('-ai', '--ai_only', dest='ai_only', default=False, 
-                    help='play the Minimax (with alpha-beta pruning) and Monte Carlo Tree Search algorithms against each other', 
+                    help='play the Minimax (with alpha-beta pruning) and Monte Carlo tree search algorithms against each other', 
+                    action='store_true')
+parser.add_argument('-cm', '--compare_minimax', dest='compare_minimax', default=False,
+                    help='compare Minimax and Minimax with alpha-beta pruning on depth vs. average execution times',
+                    action='store_true')
+parser.add_argument('-cet', '--compare_execution_times', dest='compare_execution_times', default=False,
+                    help='compare average execution times for Minimax, Minimax with alpha-beta pruning, and Monte Carlo tree search',
+                    action='store_true')
+parser.add_argument('-cw', '--compare_wins', dest='compare_wins', default=False,
+                    help='compare Minimax and Monte Carlo tree search on which one wins more across N number of runs',
                     action='store_true')
 args = parser.parse_args()
 
