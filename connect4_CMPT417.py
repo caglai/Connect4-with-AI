@@ -394,15 +394,15 @@ while not game_over:
         if event.type == pygame.QUIT:
             sys.exit()
 
-        if event.type == pygame.MOUSEMOTION:
-            pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
-            posx = event.pos[0]
-            if turn == PLAYER:
-                pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
-
         pygame.display.update()
 
         if not args.ai_only:
+            if event.type == pygame.MOUSEMOTION:
+                pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
+                posx = event.pos[0]
+                if turn == PLAYER:
+                    pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
                 #print(event.pos)
@@ -432,15 +432,15 @@ while not game_over:
         #col = random.randint(0, COLUMN_COUNT-1)
         #col = pick_best_move(board, AI_PIECE)
         st = time.time()
-        #col, score = minimaxab(board, ROW_COUNT-1, -math.inf, math.inf, True)
-        col, score = minimax(board, ROW_COUNT-1, True)
+        col, score = minimaxab(board, ROW_COUNT-1, -math.inf, math.inf, True)
+        #col, score = minimax(board, ROW_COUNT-1, True)
+        #col, score = MCTS(board, ROW_COUNT-1, True) 
         et = time.time()
         elapsed_time = et - st
         print('Execution time:', elapsed_time, 'seconds')
         
 
         if is_valid_location(board, col):
-            #pygame.time.wait(500)
             row = get_next_open_row(board, col)
             drop_piece(board, row, col, AI_PIECE)
 
@@ -460,7 +460,8 @@ while not game_over:
     
     # Ask for Player 1 input in the case where Player 1 is also an AI
     if turn == PLAYER and args.ai_only and not game_over:
-        col = MCTS(board, ROW_COUNT-1, False) # Placeholder for real MCTS function call
+        col, score = MCTS(board, ROW_COUNT-1, False)
+        #col, score = minimaxab(board, ROW_COUNT-1, -math.inf, math.inf, False) 
 
         if is_valid_location(board, col):
             row = get_next_open_row(board, col)
@@ -476,7 +477,6 @@ while not game_over:
 
             print_board(board)
             draw_board(board)
-
 
     if game_over:
         pygame.time.wait(3000)
