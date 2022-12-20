@@ -89,6 +89,7 @@ COLUMN_COUNT = 7
 PLAYER = 0
 AI = 1
 
+MCTS = 0
 MINIMAX = 0
 ALPHA_BETA = 1
 
@@ -96,6 +97,7 @@ EMPTY = 0
 PLAYER_PIECE = 1
 AI_PIECE = 2
 
+MCTS_PIECE = 1
 MINIMAX_PIECE = 1
 ALPHA_BETA_PIECE = 2
 
@@ -212,23 +214,7 @@ def get_valid_locations(board):
         if is_valid_location(board, col):
             valid_locations.append(col)
     return valid_locations
-'''
-def pick_best_move(board, piece):
 
-    valid_locations = get_valid_locations(board)
-    best_score = -10000
-    best_col = random.choice(valid_locations)
-    for col in valid_locations:
-        row = get_next_open_row(board, col)
-        temp_board = board.copy()
-        drop_piece(temp_board, row, col, piece)
-        score = score_position(temp_board, piece)
-        if score > best_score:
-            best_score = score
-            best_col = col
-
-    return best_col
-'''
 def draw_board(board, screen, height, RADIUS):
     for c in range(COLUMN_COUNT):
         for r in range(ROW_COUNT):
@@ -425,10 +411,21 @@ def compare_minimax():
 def compare_execution_times():
     print('compare et')
 
-def compare_wins():
-    print('compare wins')
+def compare_wins(args, depth):
+    num_minimax_alpha_beta_wins = 0
+    num_mcts_wins = 0
+    for run in range(5):
+        winner = play(args, True, depth)
+        if winner == ALPHA_BETA:
+            num_minimax_alpha_beta_wins += 1
+        elif winner == MCTS:
+            num_mcts_wins += 1 
+    
+    print(num_minimax_alpha_beta_wins)
+    print(num_mcts_wins)
 
-def play(args, depth):
+
+def play(args, ai_only, depth):
     # ---------------------------
     # Run the Game
     # ---------------------------
@@ -438,98 +435,97 @@ def play(args, depth):
     # $$$ 2) 1 AI and 1 Human player with same algorithm ( choice between 4 algorithm )
 
     board = create_board()
-    print_board(board)
     game_over = False
 
-    pygame.init()
+    if not args.compare_wins:
+        print_board(board)
 
-    width = COLUMN_COUNT * SQUARESIZE
-    height = (ROW_COUNT+1) * SQUARESIZE
+        pygame.init()
 
-    size = (width, height)
+        width = COLUMN_COUNT * SQUARESIZE
+        height = (ROW_COUNT+1) * SQUARESIZE
 
-    RADIUS = int(SQUARESIZE/2 - 5)
+        size = (width, height)
 
-    screen = pygame.display.set_mode(size)
-    draw_board(board, screen, height, RADIUS)
-    pygame.display.update()
+        RADIUS = int(SQUARESIZE/2 - 5)
 
-    myfont = pygame.font.SysFont("monospace", 75)
+        screen = pygame.display.set_mode(size)
+        draw_board(board, screen, height, RADIUS)
+        pygame.display.update()
+
+        myfont = pygame.font.SysFont("monospace", 75)
 
     turn = random.randint(PLAYER, AI)
 
     while not game_over:
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
+        if not args.compare_wins:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
 
-            pygame.display.update()
+                pygame.display.update()
 
-            if not args.ai_only:
-                if event.type == pygame.MOUSEMOTION:
-                    pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
-                    posx = event.pos[0]
-                    if turn == PLAYER:
-                        pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
-
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
-                    #print(event.pos)
-                    # Ask for Player 1 Input
-                    if turn == PLAYER:
+                if not ai_only:
+                    if event.type == pygame.MOUSEMOTION:
+                        pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
                         posx = event.pos[0]
-                        col = int(math.floor(posx/SQUARESIZE))
+                        if turn == PLAYER:
+                            pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
 
-                        if is_valid_location(board, col):
-                            row = get_next_open_row(board, col)
-                            drop_piece(board, row, col, PLAYER_PIECE)
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
+                        #print(event.pos)
+                        # Ask for Player 1 Input
+                        if turn == PLAYER:
+                            posx = event.pos[0]
+                            col = int(math.floor(posx/SQUARESIZE))
 
-                            if winning_move(board, PLAYER_PIECE):
-                                label = myfont.render("Player 1 wins!!", 1, RED)
-                                screen.blit(label, (40,10))
-                                game_over = True
+                            if is_valid_location(board, col):
+                                row = get_next_open_row(board, col)
+                                drop_piece(board, row, col, PLAYER_PIECE)
 
-                            turn += 1
-                            turn = turn % 2
+                                if winning_move(board, PLAYER_PIECE):
+                                    label = myfont.render("Player 1 wins!!", 1, RED)
+                                    screen.blit(label, (40,10))
+                                    game_over = True
 
-                            print_board(board)
-                            draw_board(board, screen, height, RADIUS)
+                                turn += 1
+                                turn = turn % 2
+
+                                print_board(board)
+                                draw_board(board, screen, height, RADIUS)
 
         # Ask for Player 2 Input
         if turn == AI and not game_over:				
-
-            #col = random.randint(0, COLUMN_COUNT-1)
-            #col = pick_best_move(board, AI_PIECE)
-            st = time.time()
             col, score = minimaxab(board, depth, -math.inf, math.inf, True)
-            #col, score = minimax(board, depth, True)
-            #col, score = MCTS(board) 
-            et = time.time()
-            elapsed_time = et - st
-            print('Execution time:', elapsed_time, 'seconds')
-            
 
             if is_valid_location(board, col):
                 row = get_next_open_row(board, col)
                 drop_piece(board, row, col, AI_PIECE)
 
                 if winning_move(board, AI_PIECE):
-                    if args.ai_only:
+                    if ai_only:
                         label = myfont.render("Minimax with Alpha-Beta Pruning wins!!", 1, YELLOW)
                     else:
                         label = myfont.render("Player 2 wins!!", 1, YELLOW)
-                    screen.blit(label, (40,10))
+                    
+                    if not args.compare_wins:
+                        screen.blit(label, (40,10))
                     game_over = True
 
-                print_board(board)
-                draw_board(board, screen, height, RADIUS)
+                    if args.compare_wins:
+                        return ALPHA_BETA
+                
+                if not args.compare_wins:
+                    print_board(board)
+                    draw_board(board, screen, height, RADIUS)
 
                 turn += 1
                 turn = turn % 2
         
         # Ask for Player 1 input in the case where Player 1 is also an AI
-        if turn == PLAYER and args.ai_only and not game_over:
+        if turn == PLAYER and ai_only and not game_over:
             col, score = MCTS(board)
 
             if is_valid_location(board, col):
@@ -537,15 +533,20 @@ def play(args, depth):
                 drop_piece(board, row, col, PLAYER_PIECE)
 
                 if winning_move(board, PLAYER_PIECE):
-                    label = myfont.render("Monte Carlo Tree Search wins!!", 1, RED)
-                    screen.blit(label, (40,10))
+                    if not args.compare_wins:
+                        label = myfont.render("Monte Carlo Tree Search wins!!", 1, RED)
+                        screen.blit(label, (40,10))
                     game_over = True
+
+                    if args.compare_wins:
+                        return MCTS
 
                 turn += 1
                 turn = turn % 2
 
-                print_board(board)
-                draw_board(board, screen, height, RADIUS)
+                if not args.compare_wins:
+                    print_board(board)
+                    draw_board(board, screen, height, RADIUS)
 
         if game_over:
             pygame.time.wait(3000)
@@ -574,12 +575,15 @@ def main():
     elif args.compare_execution_times:
         compare_execution_times()
     elif args.compare_wins:
-        compare_wins()
+        depth = ROW_COUNT-1
+        compare_wins(args, True, depth)
     else:    
         depth = ROW_COUNT-1
-        play(args, depth)
+        if args.ai_only:
+            play(args, True, depth)
+        else:
+            play(args, False, depth)
 
-    
 if __name__ == '__main__':
     main()
 
