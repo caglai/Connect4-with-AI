@@ -222,7 +222,7 @@ def pick_best_move(board, piece):
 
     return best_col
 '''
-def draw_board(board):
+def draw_board(board, screen, height, RADIUS):
     for c in range(COLUMN_COUNT):
         for r in range(ROW_COUNT):
             pygame.draw.rect(screen, BLUE, (c*SQUARESIZE, r*SQUARESIZE+SQUARESIZE, SQUARESIZE, SQUARESIZE))
@@ -341,151 +341,168 @@ def minimaxab(board, depth, alpha, beta, maximizingPlayer):
                 break            
         return column, minValue
 
-# $$$: should be implemented by us
-def genetics(board, depth,maximizingPlayer):
+def genetics(board, depth, maximizingPlayer):
     pass
 
 # Reference: [99] & [10]
-def MCTS(board, depth, maximizingPlayer):
-    return mcts.run(board, depth, maximizingPlayer)
+def MCTS(board):
+    return mcts.run(board)
 
+def compare_minimax():
+    # loop over depth 
 
-# ---------------------------
-# Parse the Arguments
-# ---------------------------
-parser = argparse.ArgumentParser(description='Play Connect 4.')
-parser.add_argument('-ai', '--ai_only', dest='ai_only', default=False, 
-                    help='play the Minimax (with alpha-beta pruning) and Monte Carlo tree search algorithms against each other', 
-                    action='store_true')
-parser.add_argument('-cm', '--compare_minimax', dest='compare_minimax', default=False,
-                    help='compare Minimax and Minimax with alpha-beta pruning on depth vs. average execution times',
-                    action='store_true')
-parser.add_argument('-cet', '--compare_execution_times', dest='compare_execution_times', default=False,
-                    help='compare average execution times for Minimax, Minimax with alpha-beta pruning, and Monte Carlo tree search',
-                    action='store_true')
-parser.add_argument('-cw', '--compare_wins', dest='compare_wins', default=False,
-                    help='compare Minimax and Monte Carlo tree search on which one wins more across N number of runs',
-                    action='store_true')
-args = parser.parse_args()
+def play(args, depth):
+    # ---------------------------
+    # Run the Game
+    # ---------------------------
+    # $$$ Reference [1]:  should be implemented by us
+    # $$$ We need to implement making choices between players : 
+    # $$$ 1) 2 AI player with Genetics and Monte Carlo algorithms
+    # $$$ 2) 1 AI and 1 Human player with same algorithm ( choice between 4 algorithm )
 
-# ---------------------------
-# Run the Game
-# ---------------------------
-# $$$ Reference [1]:  should be implemented by us
-# $$$ We need to implement making choices between players : 
-# $$$ 1) 2 AI player with Genetics and Monte Carlo algorithms
-# $$$ 2) 1 AI and 1 Human player with same algorithm ( choice between 4 algorithm )
+    board = create_board()
+    print_board(board)
+    game_over = False
 
-board = create_board()
-print_board(board)
-game_over = False
+    pygame.init()
 
-pygame.init()
+    width = COLUMN_COUNT * SQUARESIZE
+    height = (ROW_COUNT+1) * SQUARESIZE
 
-width = COLUMN_COUNT * SQUARESIZE
-height = (ROW_COUNT+1) * SQUARESIZE
+    size = (width, height)
 
-size = (width, height)
+    RADIUS = int(SQUARESIZE/2 - 5)
 
-RADIUS = int(SQUARESIZE/2 - 5)
+    screen = pygame.display.set_mode(size)
+    draw_board(board, screen, height, RADIUS)
+    pygame.display.update()
 
-screen = pygame.display.set_mode(size)
-draw_board(board)
-pygame.display.update()
+    myfont = pygame.font.SysFont("monospace", 75)
 
-myfont = pygame.font.SysFont("monospace", 75)
+    turn = random.randint(PLAYER, AI)
 
-turn = random.randint(PLAYER, AI)
+    while not game_over:
 
-while not game_over:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            sys.exit()
+            pygame.display.update()
 
-        pygame.display.update()
-
-        if not args.ai_only:
-            if event.type == pygame.MOUSEMOTION:
-                pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
-                posx = event.pos[0]
-                if turn == PLAYER:
-                    pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
-                #print(event.pos)
-                # Ask for Player 1 Input
-                if turn == PLAYER:
+            if not args.ai_only:
+                if event.type == pygame.MOUSEMOTION:
+                    pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
                     posx = event.pos[0]
-                    col = int(math.floor(posx/SQUARESIZE))
+                    if turn == PLAYER:
+                        pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
 
-                    if is_valid_location(board, col):
-                        row = get_next_open_row(board, col)
-                        drop_piece(board, row, col, PLAYER_PIECE)
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
+                    #print(event.pos)
+                    # Ask for Player 1 Input
+                    if turn == PLAYER:
+                        posx = event.pos[0]
+                        col = int(math.floor(posx/SQUARESIZE))
 
-                        if winning_move(board, PLAYER_PIECE):
-                            label = myfont.render("Player 1 wins!!", 1, RED)
-                            screen.blit(label, (40,10))
-                            game_over = True
+                        if is_valid_location(board, col):
+                            row = get_next_open_row(board, col)
+                            drop_piece(board, row, col, PLAYER_PIECE)
 
-                        turn += 1
-                        turn = turn % 2
+                            if winning_move(board, PLAYER_PIECE):
+                                label = myfont.render("Player 1 wins!!", 1, RED)
+                                screen.blit(label, (40,10))
+                                game_over = True
 
-                        print_board(board)
-                        draw_board(board)
+                            turn += 1
+                            turn = turn % 2
 
-    # Ask for Player 2 Input
-    if turn == AI and not game_over:				
+                            print_board(board)
+                            draw_board(board, screen, height, RADIUS)
 
-        #col = random.randint(0, COLUMN_COUNT-1)
-        #col = pick_best_move(board, AI_PIECE)
-        st = time.time()
-        col, score = minimaxab(board, ROW_COUNT-1, -math.inf, math.inf, True)
-        #col, score = minimax(board, ROW_COUNT-1, True)
-        #col, score = MCTS(board, ROW_COUNT-1, True) 
-        et = time.time()
-        elapsed_time = et - st
-        print('Execution time:', elapsed_time, 'seconds')
+        # Ask for Player 2 Input
+        if turn == AI and not game_over:				
+
+            #col = random.randint(0, COLUMN_COUNT-1)
+            #col = pick_best_move(board, AI_PIECE)
+            st = time.time()
+            col, score = minimaxab(board, depth, -math.inf, math.inf, True)
+            #col, score = minimax(board, depth, True)
+            #col, score = MCTS(board) 
+            et = time.time()
+            elapsed_time = et - st
+            print('Execution time:', elapsed_time, 'seconds')
+            
+
+            if is_valid_location(board, col):
+                row = get_next_open_row(board, col)
+                drop_piece(board, row, col, AI_PIECE)
+
+                if winning_move(board, AI_PIECE):
+                    if args.ai_only:
+                        label = myfont.render("Minimax with Alpha-Beta Pruning wins!!", 1, YELLOW)
+                    else:
+                        label = myfont.render("Player 2 wins!!", 1, YELLOW)
+                    screen.blit(label, (40,10))
+                    game_over = True
+
+                print_board(board)
+                draw_board(board, screen, height, RADIUS)
+
+                turn += 1
+                turn = turn % 2
         
+        # Ask for Player 1 input in the case where Player 1 is also an AI
+        if turn == PLAYER and args.ai_only and not game_over:
+            col, score = MCTS(board)
 
-        if is_valid_location(board, col):
-            row = get_next_open_row(board, col)
-            drop_piece(board, row, col, AI_PIECE)
+            if is_valid_location(board, col):
+                row = get_next_open_row(board, col)
+                drop_piece(board, row, col, PLAYER_PIECE)
 
-            if winning_move(board, AI_PIECE):
-                if args.ai_only:
-                    label = myfont.render("Minimax with Alpha-Beta Pruning wins!!", 1, YELLOW)
-                else:
-                    label = myfont.render("Player 2 wins!!", 1, YELLOW)
-                screen.blit(label, (40,10))
-                game_over = True
+                if winning_move(board, PLAYER_PIECE):
+                    label = myfont.render("Monte Carlo Tree Search wins!!", 1, RED)
+                    screen.blit(label, (40,10))
+                    game_over = True
 
-            print_board(board)
-            draw_board(board)
+                turn += 1
+                turn = turn % 2
 
-            turn += 1
-            turn = turn % 2
+                print_board(board)
+                draw_board(board, screen, height, RADIUS)
+
+        if game_over:
+            pygame.time.wait(3000)
+
+def main():
+    # ---------------------------
+    # Parse the Arguments
+    # ---------------------------
+    parser = argparse.ArgumentParser(description='Play Connect 4.')
+    parser.add_argument('-ai', '--ai_only', dest='ai_only', default=False, 
+                        help='play the Minimax (with alpha-beta pruning) and Monte Carlo tree search algorithms against each other', 
+                        action='store_true')
+    parser.add_argument('-cm', '--compare_minimax', dest='compare_minimax', default=False,
+                        help='compare Minimax and Minimax with alpha-beta pruning on depth vs. average execution times',
+                        action='store_true')
+    parser.add_argument('-cet', '--compare_execution_times', dest='compare_execution_times', default=False,
+                        help='compare average execution times for Minimax, Minimax with alpha-beta pruning, and Monte Carlo tree search',
+                        action='store_true')
+    parser.add_argument('-cw', '--compare_wins', dest='compare_wins', default=False,
+                        help='compare Minimax and Monte Carlo tree search on which one wins more across 100 runs',
+                        action='store_true')
+    args = parser.parse_args()
+
+    if args.compare_minimax:
+
+    elif args.compare_execution_times;
+
+    elif args.compare_wins:
+
+    else:    
+        depth = ROW_COUNT-1
+        play(args, depth)
+
     
-    # Ask for Player 1 input in the case where Player 1 is also an AI
-    if turn == PLAYER and args.ai_only and not game_over:
-        col, score = MCTS(board, ROW_COUNT-1, False)
-        #col, score = minimaxab(board, ROW_COUNT-1, -math.inf, math.inf, False) 
+if __name__ == '__main__':
+    main()
 
-        if is_valid_location(board, col):
-            row = get_next_open_row(board, col)
-            drop_piece(board, row, col, PLAYER_PIECE)
-
-            if winning_move(board, PLAYER_PIECE):
-                label = myfont.render("Monte Carlo Tree Search wins!!", 1, RED)
-                screen.blit(label, (40,10))
-                game_over = True
-
-            turn += 1
-            turn = turn % 2
-
-            print_board(board)
-            draw_board(board)
-
-    if game_over:
-        pygame.time.wait(3000)

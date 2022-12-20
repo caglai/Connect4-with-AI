@@ -212,7 +212,7 @@ def transform_board(board):
 	return b
 
 # Entry point to the MCTS algorithm
-def run(board, depth, maximizingPlayer):
+def run(board):
 	# MCTS algorithm uses the board flipped so do a transformation here
 	b = transform_board(board)
 	
