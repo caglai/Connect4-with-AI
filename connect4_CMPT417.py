@@ -89,7 +89,7 @@ COLUMN_COUNT = 7
 PLAYER = 0
 AI = 1
 
-MCTS = 0
+MONTE_CARLO= 0
 MINIMAX = 0
 ALPHA_BETA = 1
 
@@ -97,7 +97,7 @@ EMPTY = 0
 PLAYER_PIECE = 1
 AI_PIECE = 2
 
-MCTS_PIECE = 1
+MONTE_CARLO_PIECE = 1
 MINIMAX_PIECE = 1
 ALPHA_BETA_PIECE = 2
 
@@ -403,14 +403,76 @@ def compare_minimax():
     plot.xlabel('Search Tree Depth')
     plot.xticks(np.arange(min(depths), max(depths) + 1, 1))
     plot.ylabel('Average Execution Time (s)')
-    plot.title('Move Selection Average Execution Time vs Search Tree Depth')
+    plot.title('Move selection average execution time vs. search tree depth')
     plot.legend()
     plot.show()
     
 
 def compare_execution_times():
-    print('compare et')
+    # Compare the average execution times for  Minimax with alpha-beta pruning
+    # and MCTS across 10 runs
+    alpha_beta_avg_execution_times = []
+    mcts_avg_execution_times = []
+    depth = ROW_COUNT-1
+    
+    for run in range(10):
+        board = create_board()
+        game_over = False
+        turn = random.randint(MONTE_CARLO, ALPHA_BETA)
+        num_turns = 0
+        mcts_avg_execution_time = 0
+        alpha_beta_avg_execution_time = 0
 
+        while not game_over:
+            num_turns += 1
+            if turn == MONTE_CARLO and not game_over:				
+                st = time.time()
+                col, score = MCTS(board)
+                et = time.time()
+                elapsed_time = et - st
+                mcts_avg_execution_time += elapsed_time
+                
+                if is_valid_location(board, col):
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, MONTE_CARLO_PIECE)
+
+                    if winning_move(board, MONTE_CARLO_PIECE):
+                        game_over = True
+
+                    turn += 1
+                    turn = turn % 2
+    
+            if turn == ALPHA_BETA and not game_over:
+                st = time.time()
+                col, score = minimaxab(board, depth, -math.inf, math.inf, False)
+                et = time.time()
+                elapsed_time = et - st
+                alpha_beta_avg_execution_time += elapsed_time
+
+                if is_valid_location(board, col):
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, ALPHA_BETA_PIECE)
+
+                    if winning_move(board, ALPHA_BETA_PIECE):
+                        game_over = True
+
+                    turn += 1
+                    turn = turn % 2
+        
+        mcts_avg_execution_times.append(mcts_avg_execution_time / float (num_turns))
+        alpha_beta_avg_execution_times.append(alpha_beta_avg_execution_time / float(num_turns))
+    
+    # Plot the results
+    runs = list(range(1, 11))
+    plot.plot(runs, mcts_avg_execution_times, label='Monte Carlo tree search')
+    plot.plot(runs, alpha_beta_avg_execution_times, label='Minimax with alpha-beta pruning')
+    plot.xlabel('Run Number')
+    plot.xticks(np.arange(min(runs), max(runs) + 1, 1))
+    plot.ylabel('Average Execution Time (s)')
+    plot.title('Average move selection execution times')
+    plot.legend()
+    plot.show()
+    
 def compare_wins(args, depth):
 
     # Play Minimax with alpha-beta pruning against Monte Carlo Tree Search
@@ -421,7 +483,7 @@ def compare_wins(args, depth):
         winner = play(args, True, depth)
         if winner == ALPHA_BETA:
             num_minimax_alpha_beta_wins += 1
-        elif winner == MCTS:
+        elif winner == MONTE_CARLO:
             num_mcts_wins += 1
     
     results = {'Minimax (alpha-beta)':num_minimax_alpha_beta_wins, 'Monte Carlo tree search':num_mcts_wins}
@@ -433,17 +495,13 @@ def compare_wins(args, depth):
         width = 0.4)
     plot.xlabel("Algorithm")
     plot.ylabel("Number of Wins")
-    plot.title("Winner Between Minimax and MCTS across 10 Runs")
+    plot.title("Winner between Minimax and MCTS across 10 runs")
     plot.show()
 
 def play(args, ai_only, depth):
     # ---------------------------
     # Run the Game
     # ---------------------------
-    # $$$ Reference [1]:  should be implemented by us
-    # $$$ We need to implement making choices between players : 
-    # $$$ 1) 2 AI player with Genetics and Monte Carlo algorithms
-    # $$$ 2) 1 AI and 1 Human player with same algorithm ( choice between 4 algorithm )
 
     board = create_board()
     game_over = False
@@ -550,7 +608,7 @@ def play(args, ai_only, depth):
                     game_over = True
 
                     if args.compare_wins:
-                        return MCTS
+                        return MONTE_CARLO
 
                 turn += 1
                 turn = turn % 2
@@ -574,10 +632,10 @@ def main():
                         help='compare Minimax and Minimax with alpha-beta pruning on depth vs. average execution times',
                         action='store_true')
     parser.add_argument('-cet', '--compare_execution_times', dest='compare_execution_times', default=False,
-                        help='compare average execution times for Minimax, Minimax with alpha-beta pruning, and Monte Carlo tree search',
+                        help='compare average execution times for Minimax with alpha-beta pruning and Monte Carlo tree search',
                         action='store_true')
     parser.add_argument('-cw', '--compare_wins', dest='compare_wins', default=False,
-                        help='compare Minimax and Monte Carlo tree search on which one wins more across 100 runs',
+                        help='compare Minimax and Monte Carlo tree search on which one wins more across 10 runs',
                         action='store_true')
     args = parser.parse_args()
 
