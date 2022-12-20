@@ -412,18 +412,29 @@ def compare_execution_times():
     print('compare et')
 
 def compare_wins(args, depth):
+
+    # Play Minimax with alpha-beta pruning against Monte Carlo Tree Search
+    # and see which wins across 10 runs
     num_minimax_alpha_beta_wins = 0
     num_mcts_wins = 0
-    for run in range(5):
+    for run in range(10):
         winner = play(args, True, depth)
         if winner == ALPHA_BETA:
             num_minimax_alpha_beta_wins += 1
         elif winner == MCTS:
-            num_mcts_wins += 1 
+            num_mcts_wins += 1
     
-    print(num_minimax_alpha_beta_wins)
-    print(num_mcts_wins)
+    results = {'Minimax (alpha-beta)':num_minimax_alpha_beta_wins, 'Monte Carlo tree search':num_mcts_wins}
+    algorithms = list(results.keys())
+    num_wins = list(results.values())
 
+    # Plot the results
+    plot.bar(algorithms, num_wins, color ='blue',
+        width = 0.4)
+    plot.xlabel("Algorithm")
+    plot.ylabel("Number of Wins")
+    plot.title("Winner Between Minimax and MCTS across 10 Runs")
+    plot.show()
 
 def play(args, ai_only, depth):
     # ---------------------------
@@ -576,7 +587,7 @@ def main():
         compare_execution_times()
     elif args.compare_wins:
         depth = ROW_COUNT-1
-        compare_wins(args, True, depth)
+        compare_wins(args, depth)
     else:    
         depth = ROW_COUNT-1
         if args.ai_only:
