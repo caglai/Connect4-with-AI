@@ -629,7 +629,7 @@ def main():
                         help='play the Minimax (with alpha-beta pruning) and Monte Carlo tree search algorithms against each other', 
                         action='store_true')
     parser.add_argument('-cm', '--compare_minimax', dest='compare_minimax', default=False,
-                        help='compare Minimax and Minimax with alpha-beta pruning on depth vs. average execution times',
+                        help='compare Minimax and Minimax with alpha-beta pruning on search tree depth vs. average execution times',
                         action='store_true')
     parser.add_argument('-cet', '--compare_execution_times', dest='compare_execution_times', default=False,
                         help='compare average execution times for Minimax with alpha-beta pruning and Monte Carlo tree search',
