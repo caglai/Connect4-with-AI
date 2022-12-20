@@ -65,6 +65,7 @@ Rule 4 : Winner is who can stack 4 pieces of their own denomination horizontal, 
 # Libraries
 # ---------------------------
 import numpy as np
+import matplotlib.pyplot as plot
 import argparse
 import random
 import pygame
@@ -88,9 +89,15 @@ COLUMN_COUNT = 7
 PLAYER = 0
 AI = 1
 
+MINIMAX = 0
+ALPHA_BETA = 1
+
 EMPTY = 0
 PLAYER_PIECE = 1
 AI_PIECE = 2
+
+MINIMAX_PIECE = 1
+ALPHA_BETA_PIECE = 2
 
 WINDOW_LENGTH = 4
 SQUARESIZE = 100
@@ -349,7 +356,77 @@ def MCTS(board):
     return mcts.run(board)
 
 def compare_minimax():
-    # loop over depth 
+
+    # Get the average execution times for Minimax and Minimax with alpha-beta pruning
+    # for game search tree depths ranging from 1 to 10
+    minimax_avg_execution_times = []
+    alpha_beta_avg_execution_times = []
+    
+    for depth in range(1, 6):
+        board = create_board()
+        game_over = False
+        turn = random.randint(MINIMAX, ALPHA_BETA)
+        num_turns = 0
+        minimax_avg_execution_time = 0
+        alpha_beta_avg_execution_time = 0
+
+        while not game_over:
+            num_turns += 1
+            if turn == MINIMAX and not game_over:				
+                st = time.time()
+                col, score = minimax(board, depth, True)
+                et = time.time()
+                elapsed_time = et - st
+                minimax_avg_execution_time += elapsed_time
+                
+
+                if is_valid_location(board, col):
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, MINIMAX_PIECE)
+
+                    if winning_move(board, MINIMAX_PIECE):
+                        game_over = True
+
+                    turn += 1
+                    turn = turn % 2
+    
+            if turn == ALPHA_BETA and not game_over:
+                st = time.time()
+                col, score = minimaxab(board, depth, -math.inf, math.inf, False)
+                et = time.time()
+                elapsed_time = et - st
+                alpha_beta_avg_execution_time += elapsed_time
+
+                if is_valid_location(board, col):
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, ALPHA_BETA_PIECE)
+
+                    if winning_move(board, ALPHA_BETA_PIECE):
+                        game_over = True
+
+                    turn += 1
+                    turn = turn % 2
+        
+        minimax_avg_execution_times.append(minimax_avg_execution_time / float (num_turns))
+        alpha_beta_avg_execution_times.append(alpha_beta_avg_execution_time / float(num_turns))
+    
+    # Plot the results
+    depths = list(range(1, 6))
+    plot.plot(depths, minimax_avg_execution_times, label='Minimax')
+    plot.plot(depths, alpha_beta_avg_execution_times, label='Minimax with alpha-beta pruning')
+    plot.xlabel('Search Tree Depth')
+    plot.xticks(np.arange(min(depths), max(depths) + 1, 1))
+    plot.ylabel('Average Execution Time (s)')
+    plot.title('Move Selection Average Execution Time vs Search Tree Depth')
+    plot.legend()
+    plot.show()
+    
+
+def compare_execution_times():
+    print('compare et')
+
+def compare_wins():
+    print('compare wins')
 
 def play(args, depth):
     # ---------------------------
@@ -493,11 +570,11 @@ def main():
     args = parser.parse_args()
 
     if args.compare_minimax:
-
-    elif args.compare_execution_times;
-
+        compare_minimax()
+    elif args.compare_execution_times:
+        compare_execution_times()
     elif args.compare_wins:
-
+        compare_wins()
     else:    
         depth = ROW_COUNT-1
         play(args, depth)
